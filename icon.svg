@@ -14,68 +14,17 @@
         </filter>
     </defs>
     <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+    
+    <!-- Grid Background -->
     <path d="M 128 0 L 128 512 M 256 0 L 256 512 M 384 0 L 384 512 M 0 128 L 512 128 M 0 256 L 512 256 M 0 384 L 512 384" stroke="#334155" stroke-width="4" opacity="0.4"/>
+    
+    <!-- Glowing Trend Line Shadow -->
     <path d="M 100 380 L 220 250 L 320 300 L 420 120" fill="none" stroke="url(#lineGrad)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" opacity="0.5"/>
+    
+    <!-- Main Trend Line -->
     <path d="M 100 380 L 220 250 L 320 300 L 420 120" fill="none" stroke="url(#lineGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Data Points -->
     <circle cx="100" cy="380" r="24" fill="#3b82f6"/>
     <circle cx="420" cy="120" r="24" fill="#10b981"/>
 </svg>
-
-#### 2. Buat file `manifest.json`
-*(File ini wajib agar Android mengenali nama aplikasi, warna tema, dan icon modern yang tadi).*
-Copy dan paste kode berikut ke file bernama `manifest.json`:
-
-```json
-{
-  "name": "ROAS Profit Pro",
-  "short_name": "ROAS Pro",
-  "description": "Kalkulator ROAS & Profit E-Commerce Profesional",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "icons": [
-    {
-      "src": "icon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
-}
-
-#### 3. Buat file `sw.js` (Service Worker)
-*(Ini adalah sistem caching yang membuat aplikasi bisa dibuka meski HP Anda tidak ada internet/Offline).*
-Copy dan paste kode berikut ke file bernama `sw.js`:
-
-```javascript
-const CACHE_NAME = 'roas-pro-v2';
-const ASSETS = [
-    './index.html',
-    './manifest.json',
-    './icon.svg'
-];
-
-// Instalasi & Caching File Awal
-self.addEventListener('install', e => {
-    self.skipWaiting();
-    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
-});
-
-// Bersihkan Cache Lama jika ada Update
-self.addEventListener('activate', e => {
-    e.waitUntil(
-        caches.keys().then(keys => Promise.all(
-            keys.map(key => { if (key !== CACHE_NAME) return caches.delete(key); })
-        )).then(() => self.clients.claim())
-    );
-});
-
-// Strategi Fetch (Buka cache dulu, kalau tidak ada baru ambil dari internet)
-self.addEventListener('fetch', e => {
-    e.respondWith(
-        fetch(e.request).catch(() => caches.match(e.request))
-    );
-});
-
-Cukup unggah keempat file ini ke hosting online, buka URL-nya di HP Android Anda, klik menu "Instal App", dan logo Chrome kecil itu pasti tidak akan muncul lagi!

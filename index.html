@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -7,15 +8,16 @@
     
     <!-- PWA & Mobile Meta Tags (Optimasi iOS & Android) -->
     <meta name="theme-color" content="#0f172a">
-    <meta name="description" content="Kalkulator ROAS dan Profit E-Commerce Profesional dengan PWA Support">
+    <meta name="description" content="Kalkulator ROAS dan Profit E-Commerce Profesional">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ROAS Pro">
     
-    <!-- Dynamic PWA Injection Targets -->
-    <link rel="apple-touch-icon" id="pwa-apple-icon">
-    <link rel="manifest" id="pwa-manifest">
+    <!-- Link ke File Eksternal PWA (Akan menghilangkan logo Chrome jika dihosting) -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,21 +35,16 @@
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Form Inputs Reset */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
-        
-        /* Smooth Focus Transitions */
         input { transition: border-color 0.3s, box-shadow 0.3s; }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
 
-        /* Toast Animation */
         @keyframes slideUpFade {
             0% { transform: translateY(20px) translateX(-50%); opacity: 0; }
             10% { transform: translateY(0) translateX(-50%); opacity: 1; }
@@ -57,6 +54,7 @@
         .toast-animate {
             animation: slideUpFade 3s ease-in-out forwards;
         }
+        .icon-glow { filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4)); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 sm:p-6 pb-20 sm:pb-6">
@@ -64,8 +62,18 @@
     <!-- Header App -->
     <header class="max-w-6xl w-full mx-auto flex justify-between items-center py-3 mb-4 border-b border-slate-800/80">
         <div class="flex items-center space-x-3.5">
-            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/25 border border-white/10">
-                📈
+            <!-- Modern Logo in UI -->
+            <div class="w-11 h-11 rounded-[14px] bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center shadow-lg border border-slate-700 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px); background-size: 8px 8px;"></div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="relative z-10 icon-glow">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#3b82f6"/>
+                            <stop offset="100%" stop-color="#10b981"/>
+                        </linearGradient>
+                    </defs>
+                    <polyline points="3 17 9 11 13 15 21 5"></polyline>
+                </svg>
             </div>
             <div>
                 <h1 class="text-base sm:text-xl font-bold tracking-tight text-white leading-tight">ROAS & Profit Pro</h1>
@@ -96,7 +104,6 @@
         <!-- SECTION 1: Form Input (Kiri) -->
         <section class="lg:col-span-7 bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-[2rem] p-5 sm:p-8 shadow-2xl space-y-6">
             <form id="calcForm" class="space-y-6" onsubmit="return false;">
-                
                 <!-- Parameter Dasar -->
                 <div class="space-y-3.5">
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2.5">
@@ -244,9 +251,7 @@
 
             <!-- Kartu Profit (Highlight) -->
             <div id="cardProfit" class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-[2rem] shadow-xl transition-all duration-500 relative overflow-hidden">
-                <!-- Background Decoration -->
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
-                
                 <div class="relative z-10 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Profit Bersih</p>
@@ -266,59 +271,40 @@
         <span id="toastMessage">Tersimpan</span>
     </div>
 
-    <!-- PWA Installation Script & Logic Dashboard -->
+    <!-- Script Logic (Tahan Lama dengan Auto Save & PWA Registrator) -->
     <script>
-        /**
-         * ROAS & PROFIT PRO ENGINE
-         * Arsitektur menggunakan Modular Pattern.
-         */
+        // Registrasi Service Worker Eksternal (Menghilangkan logo Chrome saat di-host)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.log('SW Error', err));
+            });
+        }
+
         const App = (function() {
-            // Cache DOM Element
             const el = {
                 form: document.getElementById('calcForm'),
                 inputs: {
-                    harga: document.getElementById('inHarga'),
-                    hpp: document.getElementById('inHpp'),
-                    qty: document.getElementById('inQty'),
-                    ads: document.getElementById('inAds'),
-                    admin: document.getElementById('inAdmin'),
-                    affiliate: document.getElementById('inAffiliate'),
-                    pajak: document.getElementById('inPajak'),
-                    lain: document.getElementById('inLain'),
-                    operasional: document.getElementById('inOperasional')
+                    harga: document.getElementById('inHarga'), hpp: document.getElementById('inHpp'), qty: document.getElementById('inQty'),
+                    ads: document.getElementById('inAds'), admin: document.getElementById('inAdmin'), affiliate: document.getElementById('inAffiliate'),
+                    pajak: document.getElementById('inPajak'), lain: document.getElementById('inLain'), operasional: document.getElementById('inOperasional')
                 },
                 outputs: {
-                    omset: document.getElementById('outOmset'),
-                    potongan: document.getElementById('outPotongan'),
-                    cair: document.getElementById('outCair'),
-                    modal: document.getElementById('outModal'),
-                    biayaIklan: document.getElementById('outBiayaIklan'),
-                    roas: document.getElementById('outRoas'),
-                    margin: document.getElementById('outMargin'),
-                    profit: document.getElementById('outProfit'),
-                    profitPcs: document.getElementById('outProfitPcs'),
-                    badge: document.getElementById('badgeStatus'),
-                    cardProfit: document.getElementById('cardProfit'),
-                    insightBox: document.getElementById('insightBox'),
-                    insightIcon: document.getElementById('insightIcon'),
-                    insightText: document.getElementById('insightText')
+                    omset: document.getElementById('outOmset'), potongan: document.getElementById('outPotongan'), cair: document.getElementById('outCair'),
+                    modal: document.getElementById('outModal'), biayaIklan: document.getElementById('outBiayaIklan'), roas: document.getElementById('outRoas'),
+                    margin: document.getElementById('outMargin'), profit: document.getElementById('outProfit'), profitPcs: document.getElementById('outProfitPcs'),
+                    badge: document.getElementById('badgeStatus'), cardProfit: document.getElementById('cardProfit'), insightBox: document.getElementById('insightBox'),
+                    insightIcon: document.getElementById('insightIcon'), insightText: document.getElementById('insightText')
                 },
-                buttons: {
-                    reset: document.getElementById('btnReset'),
-                    install: document.getElementById('btnInstall'),
-                    share: document.getElementById('btnShare')
-                },
-                toast: document.getElementById('toast'),
-                toastMsg: document.getElementById('toastMessage'),
-                toastIcon: document.getElementById('toastIcon')
+                buttons: { reset: document.getElementById('btnReset'), install: document.getElementById('btnInstall'), share: document.getElementById('btnShare') },
+                toast: document.getElementById('toast'), toastMsg: document.getElementById('toastMessage'), toastIcon: document.getElementById('toastIcon')
             };
 
-            // Global State / Configuration
             const STATE_KEY = 'roas_pro_saved_data';
             let saveTimeout = null;
             let pwaPrompt = null;
 
-            // --- Utility Functions ---
             const parseIdr = (val) => parseFloat(val.toString().replace(/[^0-9]/g, '')) || 0;
             const formatIdrStr = (val) => {
                 let numStr = val.toString().replace(/[^,\d]/g, '');
@@ -326,267 +312,122 @@
                 let sisa = split[0].length % 3;
                 let rupiah = split[0].substr(0, sisa);
                 let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-                if (ribuan) {
-                    let separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
-                }
+                if (ribuan) { rupiah += (sisa ? '.' : '') + ribuan.join('.'); }
                 return rupiah;
             };
             const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
 
-            // --- UI Interactions ---
             const showToast = (message, icon = "✅") => {
-                el.toastMsg.innerText = message;
-                el.toastIcon.innerText = icon;
+                el.toastMsg.innerText = message; el.toastIcon.innerText = icon;
                 el.toast.classList.remove('opacity-0', 'toast-animate');
-                void el.toast.offsetWidth; // trigger reflow
+                void el.toast.offsetWidth;
                 el.toast.classList.add('toast-animate');
                 setTimeout(() => el.toast.classList.add('opacity-0'), 2900);
             };
 
             const bindEvents = () => {
-                // Formatting Currency Inputs Live
                 document.querySelectorAll('input[data-type="currency"]').forEach(input => {
                     input.addEventListener('keyup', function() {
-                        let cursorPosition = this.selectionStart;
-                        let originalLength = this.value.length;
-                        this.value = formatIdrStr(this.value);
-                        let newLength = this.value.length;
+                        let cursorPosition = this.selectionStart; let originalLength = this.value.length;
+                        this.value = formatIdrStr(this.value); let newLength = this.value.length;
                         this.setSelectionRange(cursorPosition + (newLength - originalLength), cursorPosition + (newLength - originalLength));
                         triggerCalculation();
                     });
                 });
-
-                // Trigger logic on all inputs
-                Object.values(el.inputs).forEach(input => {
-                    input.addEventListener('input', triggerCalculation);
-                });
-
-                // Buttons
+                Object.values(el.inputs).forEach(input => { input.addEventListener('input', triggerCalculation); });
                 el.buttons.reset.addEventListener('click', resetApp);
-                if(navigator.share) {
-                    el.buttons.share.classList.remove('hidden');
-                    el.buttons.share.addEventListener('click', shareResults);
-                }
-            };
+                if(navigator.share) { el.buttons.share.classList.remove('hidden'); el.buttons.share.addEventListener('click', shareResults); }
 
-            // --- Core Business Logic ---
-            const calculate = () => {
-                const harga = parseIdr(el.inputs.harga.value);
-                const hpp = parseIdr(el.inputs.hpp.value);
-                const qty = Math.max(1, parseInt(el.inputs.qty.value) || 1);
-                const ads = parseIdr(el.inputs.ads.value);
-                const operasional = parseIdr(el.inputs.operasional.value);
-
-                const adminPct = parseFloat(el.inputs.admin.value) || 0;
-                const affPct = parseFloat(el.inputs.affiliate.value) || 0;
-                const pphPct = parseFloat(el.inputs.pajak.value) || 0;
-                const lainPct = parseFloat(el.inputs.lain.value) || 0;
-
-                const omsetKotor = harga * qty;
-                const totalHpp = hpp * qty;
-                const totalOperasional = operasional * qty;
-                
-                const totalPersenPotongan = adminPct + affPct + pphPct + lainPct;
-                const nominalPotonganPct = (totalPersenPotongan / 100) * omsetKotor;
-                
-                const totalPotongan = nominalPotonganPct + totalOperasional;
-                const uangCair = omsetKotor - totalPotongan;
-                const profitBersih = uangCair - totalHpp - ads;
-                const profitPerPcs = profitBersih / qty;
-
-                const roas = ads > 0 ? (omsetKotor / ads) : 0;
-                const margin = omsetKotor > 0 ? (profitBersih / omsetKotor) * 100 : 0;
-
-                updateUI({
-                    omsetKotor, totalPotongan, uangCair, totalHpp, totalOperasional, ads, profitBersih, profitPerPcs, roas, margin
-                });
-            };
-
-            const updateUI = (data) => {
-                el.outputs.omset.innerText = formatCurrency(data.omsetKotor);
-                el.outputs.potongan.innerText = "- " + formatCurrency(data.totalPotongan);
-                el.outputs.cair.innerText = formatCurrency(data.uangCair);
-                el.outputs.modal.innerText = "- " + formatCurrency(data.totalHpp + data.totalOperasional);
-                el.outputs.biayaIklan.innerText = "- " + formatCurrency(data.ads);
-                el.outputs.roas.innerText = data.roas.toFixed(2);
-                el.outputs.margin.innerText = data.margin.toFixed(1) + "%";
-                el.outputs.profit.innerText = formatCurrency(data.profitBersih);
-                el.outputs.profitPcs.innerText = formatCurrency(data.profitPerPcs) + " / pcs";
-
-                renderInsight(data.omsetKotor, data.profitBersih, data.margin);
-            };
-
-            const renderInsight = (omset, profit, margin) => {
-                const { badge, cardProfit, insightBox, insightIcon, insightText } = el.outputs;
-
-                if (omset === 0) {
-                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 font-bold transition-all";
-                    badge.innerText = "STANDBY";
-                    cardProfit.className = "bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-[2rem] transition-all duration-500 relative overflow-hidden";
-                    insightBox.className = "p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 flex items-start gap-3 transition-all";
-                    insightIcon.innerText = "💡";
-                    insightText.innerHTML = "Ketik harga jual dan modal untuk memantau performa secara live.";
-                } else if (profit > 0) {
-                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]";
-                    badge.innerText = "PROFIT SEHAT";
-                    cardProfit.className = "bg-gradient-to-br from-emerald-950 to-slate-900 border border-emerald-500/30 p-5 sm:p-6 rounded-[2rem] shadow-xl shadow-emerald-900/20 transition-all duration-500 relative overflow-hidden";
-                    insightBox.className = "p-4 rounded-2xl bg-emerald-950/30 border border-emerald-900/50 text-xs text-emerald-200 flex items-start gap-3 transition-all";
-                    insightIcon.innerText = "🚀";
-                    insightText.innerHTML = `Luar biasa! Margin bersih Anda <b>${margin.toFixed(1)}%</b>. Skalakan iklan secara bertahap.`;
-                } else if (profit < 0) {
-                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30 transition-all shadow-[0_0_15px_rgba(244,63,94,0.2)]";
-                    badge.innerText = "RUGI (BONCOS)";
-                    cardProfit.className = "bg-gradient-to-br from-rose-950 to-slate-900 border border-rose-500/30 p-5 sm:p-6 rounded-[2rem] shadow-xl shadow-rose-900/20 transition-all duration-500 relative overflow-hidden";
-                    insightBox.className = "p-4 rounded-2xl bg-rose-950/30 border border-rose-900/50 text-xs text-rose-200 flex items-start gap-3 transition-all";
-                    insightIcon.innerText = "⚠️";
-                    insightText.innerHTML = `<b>Peringatan!</b> Anda merugi. Coba kurangi budget ads atau naikkan harga jual produk.`;
-                } else {
-                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 transition-all";
-                    badge.innerText = "BEP (BALIK MODAL)";
-                    cardProfit.className = "bg-gradient-to-br from-amber-950 to-slate-900 border border-amber-500/30 p-5 sm:p-6 rounded-[2rem] shadow-xl transition-all duration-500 relative overflow-hidden";
-                    insightBox.className = "p-4 rounded-2xl bg-amber-950/30 border border-amber-900/50 text-xs text-amber-200 flex items-start gap-3 transition-all";
-                    insightIcon.innerText = "⚖️";
-                    insightText.innerHTML = "Anda berada di titik impas. Kerja keras Anda hanya cukup untuk menutupi biaya operasional.";
-                }
-            };
-
-            const triggerCalculation = () => {
-                calculate();
-                scheduleSave();
-            };
-
-            // --- Data Persistence (Tahan Lama / Durable) ---
-            const scheduleSave = () => {
-                clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(saveState, 800); // Debounce save
-            };
-
-            const saveState = () => {
-                const data = {};
-                for (const key in el.inputs) {
-                    data[key] = el.inputs[key].value;
-                }
-                localStorage.setItem(STATE_KEY, JSON.stringify(data));
-                showToast("Data otomatis tersimpan", "💾");
-            };
-
-            const loadState = () => {
-                const saved = localStorage.getItem(STATE_KEY);
-                if (saved) {
-                    try {
-                        const data = JSON.parse(saved);
-                        for (const key in data) {
-                            if (el.inputs[key]) el.inputs[key].value = data[key];
-                        }
-                    } catch (e) { console.error("Gagal meload data", e); }
-                }
-            };
-
-            const resetApp = () => {
-                el.form.reset();
-                el.inputs.qty.value = "1";
-                el.inputs.admin.value = "10";
-                el.inputs.affiliate.value = "10";
-                el.inputs.pajak.value = "0.5";
-                el.inputs.lain.value = "0";
-                el.inputs.operasional.value = "1.250";
-                localStorage.removeItem(STATE_KEY);
-                calculate();
-                showToast("Kalkulator direset", "🔄");
-            };
-
-            const shareResults = async () => {
-                const profitStr = el.outputs.profit.innerText;
-                const roasStr = el.outputs.roas.innerText;
-                const marginStr = el.outputs.margin.innerText;
-                const text = `📊 Laporan ROAS & Profit Pro:\nProfit: ${profitStr}\nROAS: ${roasStr}x\nMargin: ${marginStr}\n\nDihitung menggunakan ROAS Profit Pro Engine.`;
-                
-                try {
-                    await navigator.share({ title: 'Laporan E-Commerce', text: text });
-                } catch (err) {
-                    navigator.clipboard.writeText(text);
-                    showToast("Laporan disalin ke clipboard", "📋");
-                }
-            };
-
-            // --- Advanced PWA Standalone Injection ---
-            const initAdvancedPWA = () => {
-                // 1. Generate Icon Base64 for Manifest
-                const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="115" fill="#0f172a"/><text x="50%" y="54%" font-family="Arial" font-size="280" text-anchor="middle" dominant-baseline="middle">📈</text></svg>`;
-                const iconBase64 = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgIcon)));
-                
-                document.getElementById('pwa-apple-icon').href = iconBase64;
-
-                // 2. Generate and Inject Dynamic Manifest
-                const manifestJSON = {
-                    "name": "ROAS Profit Pro",
-                    "short_name": "ROAS Pro",
-                    "start_url": window.location.href.split('?')[0],
-                    "display": "standalone",
-                    "background_color": "#0f172a",
-                    "theme_color": "#0f172a",
-                    "icons": [{ "src": iconBase64, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }]
-                };
-                const manifestBlob = new Blob([JSON.stringify(manifestJSON)], { type: 'application/manifest+json' });
-                document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
-
-                // 3. Register Service Worker (Blob injected Cache-First Strategy)
-                if ('serviceWorker' in navigator) {
-                    const swLogic = `
-                        const CACHE_NAME = 'roas-pro-v1';
-                        self.addEventListener('install', e => {
-                            self.skipWaiting();
-                        });
-                        self.addEventListener('activate', e => {
-                            e.waitUntil(self.clients.claim());
-                        });
-                        self.addEventListener('fetch', e => {
-                            e.respondWith(
-                                fetch(e.request).catch(() => caches.match(e.request))
-                            );
-                        });
-                    `;
-                    const swBlob = new Blob([swLogic], { type: 'application/javascript' });
-                    navigator.serviceWorker.register(URL.createObjectURL(swBlob))
-                        .then(() => console.log("PWA Engine Active"))
-                        .catch(err => console.log("PWA Engine failed", err));
-                }
-
-                // 4. Handle Install Prompt
+                // PWA Install Prompt Handler
                 window.addEventListener('beforeinstallprompt', (e) => {
-                    e.preventDefault();
-                    pwaPrompt = e;
-                    el.buttons.install.classList.remove('hidden');
-                    el.buttons.install.classList.add('flex');
+                    e.preventDefault(); pwaPrompt = e;
+                    el.buttons.install.classList.remove('hidden'); el.buttons.install.classList.add('flex');
                 });
-
                 el.buttons.install.addEventListener('click', async () => {
-                    if (pwaPrompt) {
-                        pwaPrompt.prompt();
-                        const { outcome } = await pwaPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                            el.buttons.install.classList.add('hidden');
-                            showToast("Aplikasi sedang diinstal", "📲");
-                        }
+                    if (pwaPrompt) { pwaPrompt.prompt(); const { outcome } = await pwaPrompt.userChoice;
+                        if (outcome === 'accepted') { el.buttons.install.classList.add('hidden'); showToast("Aplikasi sedang diinstal", "📲"); }
                         pwaPrompt = null;
                     }
                 });
             };
 
-            // Initialization
-            return {
-                start: () => {
-                    bindEvents();
-                    loadState();
-                    calculate();
-                    initAdvancedPWA();
+            const calculate = () => {
+                const harga = parseIdr(el.inputs.harga.value); const hpp = parseIdr(el.inputs.hpp.value);
+                const qty = Math.max(1, parseInt(el.inputs.qty.value) || 1); const ads = parseIdr(el.inputs.ads.value);
+                const operasional = parseIdr(el.inputs.operasional.value);
+                const adminPct = parseFloat(el.inputs.admin.value) || 0; const affPct = parseFloat(el.inputs.affiliate.value) || 0;
+                const pphPct = parseFloat(el.inputs.pajak.value) || 0; const lainPct = parseFloat(el.inputs.lain.value) || 0;
+
+                const omsetKotor = harga * qty; const totalHpp = hpp * qty; const totalOperasional = operasional * qty;
+                const nominalPotonganPct = ((adminPct + affPct + pphPct + lainPct) / 100) * omsetKotor;
+                const totalPotongan = nominalPotonganPct + totalOperasional;
+                const uangCair = omsetKotor - totalPotongan; const profitBersih = uangCair - totalHpp - ads;
+
+                updateUI({ omsetKotor, totalPotongan, uangCair, totalHpp, totalOperasional, ads, profitBersih, profitPerPcs: profitBersih / qty, roas: ads > 0 ? (omsetKotor / ads) : 0, margin: omsetKotor > 0 ? (profitBersih / omsetKotor) * 100 : 0 });
+            };
+
+            const updateUI = (data) => {
+                el.outputs.omset.innerText = formatCurrency(data.omsetKotor); el.outputs.potongan.innerText = "- " + formatCurrency(data.totalPotongan);
+                el.outputs.cair.innerText = formatCurrency(data.uangCair); el.outputs.modal.innerText = "- " + formatCurrency(data.totalHpp + data.totalOperasional);
+                el.outputs.biayaIklan.innerText = "- " + formatCurrency(data.ads); el.outputs.roas.innerText = data.roas.toFixed(2);
+                el.outputs.margin.innerText = data.margin.toFixed(1) + "%"; el.outputs.profit.innerText = formatCurrency(data.profitBersih);
+                el.outputs.profitPcs.innerText = formatCurrency(data.profitPerPcs) + " / pcs";
+                renderInsight(data.omsetKotor, data.profitBersih, data.margin);
+            };
+
+            const renderInsight = (omset, profit, margin) => {
+                const { badge, cardProfit, insightBox, insightIcon, insightText } = el.outputs;
+                if (omset === 0) {
+                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 font-bold transition-all"; badge.innerText = "STANDBY";
+                    cardProfit.className = "bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-[2rem] transition-all duration-500 relative overflow-hidden";
+                    insightBox.className = "p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 flex items-start gap-3 transition-all";
+                    insightIcon.innerText = "💡"; insightText.innerHTML = "Ketik harga jual dan modal untuk memantau performa secara live.";
+                } else if (profit > 0) {
+                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]"; badge.innerText = "PROFIT SEHAT";
+                    cardProfit.className = "bg-gradient-to-br from-emerald-950 to-slate-900 border border-emerald-500/30 p-5 sm:p-6 rounded-[2rem] shadow-xl shadow-emerald-900/20 transition-all duration-500 relative overflow-hidden";
+                    insightBox.className = "p-4 rounded-2xl bg-emerald-950/30 border border-emerald-900/50 text-xs text-emerald-200 flex items-start gap-3 transition-all";
+                    insightIcon.innerText = "🚀"; insightText.innerHTML = `Luar biasa! Margin bersih Anda <b>${margin.toFixed(1)}%</b>. Skalakan iklan secara bertahap.`;
+                } else if (profit < 0) {
+                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30 transition-all shadow-[0_0_15px_rgba(244,63,94,0.2)]"; badge.innerText = "RUGI (BONCOS)";
+                    cardProfit.className = "bg-gradient-to-br from-rose-950 to-slate-900 border border-rose-500/30 p-5 sm:p-6 rounded-[2rem] shadow-xl shadow-rose-900/20 transition-all duration-500 relative overflow-hidden";
+                    insightBox.className = "p-4 rounded-2xl bg-rose-950/30 border border-rose-900/50 text-xs text-rose-200 flex items-start gap-3 transition-all";
+                    insightIcon.innerText = "⚠️"; insightText.innerHTML = `<b>Peringatan!</b> Anda merugi. Coba kurangi budget ads atau naikkan harga jual produk.`;
+                } else {
+                    badge.className = "text-[10px] px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 transition-all"; badge.innerText = "BEP (BALIK MODAL)";
+                    cardProfit.className = "bg-gradient-to-br from-amber-950 to-slate-900 border border-amber-500/30 p-5 sm:p-6 rounded-[2rem] shadow-xl transition-all duration-500 relative overflow-hidden";
+                    insightBox.className = "p-4 rounded-2xl bg-amber-950/30 border border-amber-900/50 text-xs text-amber-200 flex items-start gap-3 transition-all";
+                    insightIcon.innerText = "⚖️"; insightText.innerHTML = "Anda berada di titik impas. Kerja keras Anda hanya cukup untuk menutupi biaya operasional.";
                 }
             };
-        })();
 
-        // Jalankan App saat DOM siap
+            const triggerCalculation = () => { calculate(); scheduleSave(); };
+            const scheduleSave = () => { clearTimeout(saveTimeout); saveTimeout = setTimeout(saveState, 800); };
+            const saveState = () => {
+                const data = {}; for (const key in el.inputs) data[key] = el.inputs[key].value;
+                localStorage.setItem(STATE_KEY, JSON.stringify(data)); showToast("Data otomatis tersimpan", "💾");
+            };
+            const loadState = () => {
+                const saved = localStorage.getItem(STATE_KEY);
+                if (saved) { try { const data = JSON.parse(saved); for (const key in data) if (el.inputs[key]) el.inputs[key].value = data[key]; } catch (e) {} }
+            };
+            const resetApp = () => {
+                el.form.reset(); el.inputs.qty.value = "1"; el.inputs.admin.value = "10"; el.inputs.affiliate.value = "10";
+                el.inputs.pajak.value = "0.5"; el.inputs.lain.value = "0"; el.inputs.operasional.value = "1.250";
+                localStorage.removeItem(STATE_KEY); calculate(); showToast("Kalkulator direset", "🔄");
+            };
+            const shareResults = async () => {
+                const text = `📊 Laporan ROAS & Profit Pro:\nProfit: ${el.outputs.profit.innerText}\nROAS: ${el.outputs.roas.innerText}x\nMargin: ${el.outputs.margin.innerText}\n\nDihitung menggunakan ROAS Profit Pro Engine.`;
+                try { await navigator.share({ title: 'Laporan E-Commerce', text: text }); } 
+                catch (err) { navigator.clipboard.writeText(text); showToast("Laporan disalin ke clipboard", "📋"); }
+            };
+
+            return { start: () => { bindEvents(); loadState(); calculate(); } };
+        })();
+        
         document.addEventListener('DOMContentLoaded', () => App.start());
     </script>
 </body>
 </html>
+
+
+```

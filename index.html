@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ROAS & Profit Calculator Pro</title>
     
-    <!-- PWA & Mobile Meta Tags (Optimasi iOS & Android) -->
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#0f172a">
     <meta name="description" content="Kalkulator ROAS dan Profit E-Commerce Profesional">
     <meta name="mobile-web-app-capable" content="yes">
@@ -13,32 +13,21 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ROAS Pro">
     
-    <!-- Link ke File Eksternal PWA (Akan menghilangkan logo Chrome jika dihosting) -->
+    <!-- PWA Manifest & Icons (MENGGUNAKAN PNG) -->
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-        }
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-dark);
-            color: #f8fafc;
-            -webkit-font-smoothing: antialiased;
-        }
-        
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        :root { --bg-dark: #0f172a; --bg-card: #1e293b; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #f8fafc; -webkit-font-smoothing: antialiased; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
         input { transition: border-color 0.3s, box-shadow 0.3s; }
-        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
@@ -50,9 +39,7 @@
             90% { transform: translateY(0) translateX(-50%); opacity: 1; }
             100% { transform: translateY(-20px) translateX(-50%); opacity: 0; }
         }
-        .toast-animate {
-            animation: slideUpFade 3s ease-in-out forwards;
-        }
+        .toast-animate { animation: slideUpFade 3s ease-in-out forwards; }
         .icon-glow { filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4)); }
     </style>
 </head>
@@ -270,13 +257,12 @@
         <span id="toastMessage">Tersimpan</span>
     </div>
 
-    <!-- Script Logic (Tahan Lama dengan Auto Save & PWA Registrator) -->
     <script>
-        // Registrasi Service Worker Eksternal (Menghilangkan logo Chrome saat di-host)
+        // Registrasi Service Worker PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW Registered', reg))
+                    .then(reg => console.log('SW Registered'))
                     .catch(err => console.log('SW Error', err));
             });
         }
@@ -337,7 +323,7 @@
                 el.buttons.reset.addEventListener('click', resetApp);
                 if(navigator.share) { el.buttons.share.classList.remove('hidden'); el.buttons.share.addEventListener('click', shareResults); }
 
-                // PWA Install Prompt Handler
+                // PWA Install Event
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault(); pwaPrompt = e;
                     el.buttons.install.classList.remove('hidden'); el.buttons.install.classList.add('flex');

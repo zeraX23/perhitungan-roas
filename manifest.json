@@ -1,0 +1,17 @@
+{
+  "name": "ROAS Profit Pro",
+  "short_name": "ROAS Pro",
+  "description": "Kalkulator ROAS & Profit E-Commerce Profesional",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
